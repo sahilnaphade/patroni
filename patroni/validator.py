@@ -18,6 +18,10 @@ from .log import type_logformat
 from .utils import data_directory_is_empty, get_major_version, parse_int, split_host_port
 
 
+# Additional parameters to fine-tune validation process
+VALIDATION_PARAMS : Dict[str, bool] = dict()
+
+
 def validate_log_field(field: Union[str, Dict[str, Any], Any]) -> bool:
     """Checks if log field is valid.
 
@@ -137,7 +141,10 @@ def validate_host_port(host_port: str, listen: bool = False, multiple_hosts: boo
             s = socket.socket(proto[0][0], socket.SOCK_STREAM)
             try:
                 if s.connect_ex((host, port)) == 0:
-                    if listen:
+                    # Do not raise an exception if ignore_listen_port is set to True.
+                    if VALIDATION_PARAMS.get('ignore_listen_port', False):
+                        pass
+                    elif listen:
                         raise ConfigParseError("Port {} is already in use.".format(port))
                 elif not listen:
                     raise ConfigParseError("{} is not reachable".format(host_port))
